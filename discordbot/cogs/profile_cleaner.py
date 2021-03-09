@@ -30,10 +30,25 @@ class ProfileCleanerCog(Cog):
                 str_io = io.BytesIO(json.dumps(response.profile, indent="\t", ensure_ascii=False).encode())
 
                 await context.send(
-                    f"Found {response.duplicate_ids} duplicate id(s), removed {response.items_removed} item(s).",
+                    f"Found {len(response.duplicate_items)} duplicate id(s), removed {len(response.removed_orphan_items)} item(s).",
                     file=File(str_io, attachment.filename),
                 )
             except Exception as exception:
                 await context.send(f"Error processing attachment {attachment.filename}")
                 await context.send(f"```py\n{traceback.format_exc()}```")
                 raise exception
+
+    @commands.check(no_dms_check)
+    @commands.command()
+    async def analyze(self, context: Context):
+        for attachment in context.message.attachments:
+            attachment: Attachment
+            response = remove_duplicates.clean(json.loads(await attachment.read()))
+
+            duplicate_items = "\n".join(response.duplicate_items)
+            orphan_items = "\n".join(response.removed_orphan_items)
+            await context.send("```"
+                               "Duplicate items:\n"
+                               f"{duplicate_items}\n"
+                               "Orphan items:\n"
+                               f"{orphan_items}```")
