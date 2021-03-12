@@ -30,7 +30,9 @@ class ProfileCleanerCog(Cog):
                 str_io = io.BytesIO(json.dumps(response.profile, indent="\t", ensure_ascii=False).encode())
 
                 await context.send(
-                    f"Found {len(response.duplicate_items)} duplicate id(s), removed {len(response.removed_orphan_items)} item(s).",
+                    f"Duplicate ids found: {len(response.duplicate_items)}\n"
+                    f"Removed {response.removed_items_count} items with duplicate ids\n"
+                    f"Removed {len(response.removed_orphan_items)} orphan items.",
                     file=File(str_io, attachment.filename),
                 )
             except Exception as exception:
@@ -47,8 +49,17 @@ class ProfileCleanerCog(Cog):
 
             duplicate_items = "\n".join(response.duplicate_items)
             orphan_items = "\n".join(response.removed_orphan_items)
-            await context.send("```"
-                               "Duplicate items:\n"
-                               f"{duplicate_items}\n"
-                               "Orphan items:\n"
-                               f"{orphan_items}```")
+
+            string = "\n".join(
+                [
+                    "```",
+                    f"Duplicate items ({len(response.duplicate_items)}):",
+                    f"{duplicate_items}",
+                    f"Orphan items ({len(response.removed_orphan_items)}):",
+                    f"{orphan_items}",
+                    "```",
+                ]
+            )
+            await context.send(
+                "There's your report:", file=File(io.BytesIO(string.encode()), filename="report.md")
+            )
