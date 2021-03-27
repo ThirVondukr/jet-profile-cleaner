@@ -6,6 +6,7 @@ name = "pypi"
 [packages]
 "discord.py" = "==1.6.0"
 python-dotenv = "*"
+jinja2 = "==2.11.3"
 
 [dev-packages]
 black = "*"

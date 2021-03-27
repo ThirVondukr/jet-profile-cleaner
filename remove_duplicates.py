@@ -10,10 +10,14 @@ class ProfileCleaningResponse:
     duplicate_items: List[str] = field(default_factory=list)
     removed_orphan_items: List[str] = field(default_factory=list)
 
+    @property
+    def profile_changed(self) -> bool:
+        return bool(self.removed_items_count or self.removed_orphan_items or self.duplicate_items)
+
 
 def clean(profile: dict) -> ProfileCleaningResponse:
     response = ProfileCleaningResponse(profile=profile)
-    
+
     ids_counter = collections.Counter(item["_id"] for item in profile["Inventory"]["items"])
     duplicate_ids: Set[str] = {item_id for item_id, count in ids_counter.items() if count >= 2}
     response.duplicate_items = list(duplicate_ids)
