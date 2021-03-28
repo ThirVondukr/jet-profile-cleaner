@@ -41,6 +41,15 @@ class ProfileCleanerCog(Cog):
             else:
                 await context.send(message_template.render(response=response, ctx=context))
 
+    @commands.check(no_dms_check)
+    @commands.command()
+    async def experimental_clean_ammo(self, ctx: Context):
+        attachment: Attachment = ctx.message.attachments[0]
+        profile = json.loads(await attachment.read())
+        profile = cleanin.ammo.clean(profile)
+        await ctx.send(file=self.profile_to_file(profile, attachment.filename))
+
+    @experimental_clean_ammo.error
     @clean.error
     async def clean_error(self, ctx: Context, invoke_error: CommandInvokeError):
         error = invoke_error.original
@@ -49,14 +58,6 @@ class ProfileCleanerCog(Cog):
             await ctx.send(f"```py\n" f"{error.__class__.__name__}: {error}\n" f"```")
         else:
             raise error
-
-    @commands.check(no_dms_check)
-    @commands.command()
-    async def experimental_clean_ammo(self, ctx: Context):
-        attachment: Attachment = ctx.message.attachments[0]
-        profile = json.loads(await attachment.read())
-        profile = cleanin.ammo.clean(profile)
-        await ctx.send(file=self.profile_to_file(profile, attachment.filename))
 
     # @commands.check(no_dms_check)
     # @commands.command()
