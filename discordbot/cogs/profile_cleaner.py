@@ -36,7 +36,7 @@ class ProfileCleanerCog(Cog):
             if response.profile_changed:
                 await context.send(
                     message_template.render(response=response, ctx=context),
-                    file=self.profile_to_file(response.profile, attachment.filename)
+                    file=self.profile_to_file(response.profile, attachment.filename),
                 )
             else:
                 await context.send(message_template.render(response=response, ctx=context))
@@ -46,11 +46,7 @@ class ProfileCleanerCog(Cog):
         error = invoke_error.original
 
         if isinstance(error, json.decoder.JSONDecodeError):
-            await ctx.send(
-                f'```py\n'
-                f'{error.__class__.__name__}: {error}\n'
-                f'```'
-            )
+            await ctx.send(f"```py\n" f"{error.__class__.__name__}: {error}\n" f"```")
         else:
             raise error
 

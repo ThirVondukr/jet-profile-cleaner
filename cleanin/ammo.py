@@ -28,7 +28,7 @@ def clean(profile: dict) -> dict:
     return profile
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     file = open("character.json", encoding="utf8")
     profile = json.load(file)
     clean(profile)

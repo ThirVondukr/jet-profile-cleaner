@@ -23,7 +23,7 @@ def clean(profile: dict) -> ProfileCleaningResponse:
     response.duplicate_items = list(duplicate_ids)
 
     items = {item["_id"]: item for item in profile["Inventory"]["items"] if item["_id"] not in duplicate_ids}
-    response.removed_items_count += len(profile['Inventory']['items']) - len(items)
+    response.removed_items_count += len(profile["Inventory"]["items"]) - len(items)
 
     # Set of root ids (Stash, quest items, equipment)
     inventory_root_items: Set[str] = {item for item in profile["Inventory"].values() if isinstance(item, str)}

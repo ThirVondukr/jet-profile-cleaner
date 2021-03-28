@@ -5,5 +5,4 @@ jinja_env = Environment(
     autoescape=False,
     trim_blocks=True,
     lstrip_blocks=True,
-
 )
