@@ -30,7 +30,7 @@ class ProfileCleanerCog(Cog):
     async def clean(self, context: Context):
         for attachment in context.message.attachments:
             attachment: Attachment
-            response = duplicates.clean(json.loads(await attachment.read()))
+            response = cleanin.duplicates.clean(json.loads(await attachment.read()))
             message_template = jinja_env.get_template("clean.md")
 
             if response.profile_changed:
