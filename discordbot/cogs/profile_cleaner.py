@@ -5,7 +5,7 @@ from discord import Attachment, DMChannel, File
 from discord.ext import commands
 from discord.ext.commands import Bot, Cog, CommandInvokeError, Context
 
-import remove_duplicates
+import cleanin
 from templates import jinja_env
 
 
@@ -20,19 +20,23 @@ class ProfileCleanerCog(Cog):
     def __init__(self, bot: Bot):
         self.bot = bot
 
+    @staticmethod
+    def profile_to_file(profile: dict, filename: str) -> File:
+        str_io = io.BytesIO(json.dumps(profile, indent="\t", ensure_ascii=False).encode())
+        return File(str_io, filename)
+
     @commands.check(no_dms_check)
     @commands.command()
     async def clean(self, context: Context):
         for attachment in context.message.attachments:
             attachment: Attachment
-            response = remove_duplicates.clean(json.loads(await attachment.read()))
+            response = duplicates.clean(json.loads(await attachment.read()))
             message_template = jinja_env.get_template("clean.md")
 
             if response.profile_changed:
-                str_io = io.BytesIO(json.dumps(response.profile, indent="\t", ensure_ascii=False).encode())
                 await context.send(
                     message_template.render(response=response, ctx=context),
-                    file=File(str_io, attachment.filename)
+                    file=self.profile_to_file(response.profile, attachment.filename)
                 )
             else:
                 await context.send(message_template.render(response=response, ctx=context))
@@ -47,13 +51,23 @@ class ProfileCleanerCog(Cog):
                 f'{error.__class__.__name__}: {error}\n'
                 f'```'
             )
+        else:
+            raise error
+
+    @commands.check(no_dms_check)
+    @commands.command()
+    async def experimental_clean_ammo(self, ctx: Context):
+        attachment: Attachment = ctx.message.attachments[0]
+        profile = json.loads(await attachment.read())
+        profile = cleanin.ammo.clean(profile)
+        await ctx.send(file=self.profile_to_file(profile, attachment.filename))
 
     # @commands.check(no_dms_check)
     # @commands.command()
     async def analyze(self, context: Context):
         for attachment in context.message.attachments:
             attachment: Attachment
-            response = remove_duplicates.clean(json.loads(await attachment.read()))
+            response = cleanin.duplicates.clean(json.loads(await attachment.read()))
 
             duplicate_items = "\n".join(response.duplicate_items)
             orphan_items = "\n".join(response.removed_orphan_items)
