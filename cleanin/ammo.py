@@ -1,4 +1,3 @@
-import json
 from collections import defaultdict
 from typing import List
 
@@ -26,9 +25,3 @@ def clean(profile: dict) -> dict:
     profile["Inventory"]["items"] = [i for i in profile["Inventory"]["items"] if i not in broken_ammo]
 
     return profile
-
-
-if __name__ == "__main__":
-    file = open("character.json", encoding="utf8")
-    profile = json.load(file)
-    clean(profile)
