@@ -12,7 +12,7 @@ from discordbot.utils import dict_to_file
 
 async def no_dms_check(context: Context):
     if isinstance(context.channel, DMChannel):
-        await context.send("You're not allowed to use this command in direct messages.")
+        await context.send("You can't use this command in dm's.")
         return False
     return True
 
