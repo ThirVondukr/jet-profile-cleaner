@@ -39,7 +39,7 @@ class ProfileCleanerCog(Cog):
         response = cleanin.duplicates.clean(json.loads(await attachment.read()))
 
         if response.profile_changed:
-            messages: List[str] = []
+            messages: List[str] = [f"{context.message.author.mention}"]
             if response.duplicate_items:
                 messages.append(f"Removed {len(response.duplicate_items)} duplicate item(s).")
             if response.removed_orphan_items:
