@@ -1,12 +1,13 @@
-import io
 import json
+from json.decoder import JSONDecodeError
+from typing import List
 
-from discord import Attachment, DMChannel, File
+from discord import Attachment, DMChannel
 from discord.ext import commands
 from discord.ext.commands import Bot, Cog, CommandInvokeError, Context
 
 import cleanin
-from templates import jinja_env
+from discordbot.utils import dict_to_file
 
 
 async def no_dms_check(context: Context):
@@ -20,26 +21,38 @@ class ProfileCleanerCog(Cog):
     def __init__(self, bot: Bot):
         self.bot = bot
 
-    @staticmethod
-    def profile_to_file(profile: dict, filename: str) -> File:
-        str_io = io.BytesIO(json.dumps(profile, indent="\t", ensure_ascii=False).encode())
-        return File(str_io, filename)
-
     @commands.check(no_dms_check)
-    @commands.command()
+    @commands.command(
+        brief="Cleans the profile",
+        description="Removes all duplicate items from attached profile.json file.",
+    )
     async def clean(self, context: Context):
-        for attachment in context.message.attachments:
-            attachment: Attachment
-            response = cleanin.duplicates.clean(json.loads(await attachment.read()))
-            message_template = jinja_env.get_template("clean.md")
+        if not context.message.attachments:
+            await context.send(
+                f"{context.message.author.mention}\n"
+                "No attachments found!\n"
+                "You should attach your profile file to the message.",
+            )
+            return
 
-            if response.profile_changed:
-                await context.send(
-                    message_template.render(response=response, ctx=context),
-                    file=self.profile_to_file(response.profile, attachment.filename),
-                )
-            else:
-                await context.send(message_template.render(response=response, ctx=context))
+        attachment: Attachment = context.message.attachments[0]
+        response = cleanin.duplicates.clean(json.loads(await attachment.read()))
+
+        if response.profile_changed:
+            messages: List[str] = []
+            if response.duplicate_items:
+                messages.append(f"Removed {len(response.duplicate_items)} duplicate item(s).")
+            if response.removed_orphan_items:
+                messages.append(f"Removed {len(response.removed_orphan_items)} orphan item(s).")
+
+            await context.send(
+                "\n".join(messages),
+                file=dict_to_file(response.profile, attachment.filename),
+            )
+        else:
+            await context.send(
+                f"{context.message.author.mention} No duplicate items were found in profile"
+            )
 
     @commands.check(no_dms_check)
     @commands.command()
@@ -47,38 +60,23 @@ class ProfileCleanerCog(Cog):
         attachment: Attachment = ctx.message.attachments[0]
         profile = json.loads(await attachment.read())
         profile = cleanin.ammo.clean(profile)
-        await ctx.send(file=self.profile_to_file(profile, attachment.filename))
+        await ctx.send(file=dict_to_file(profile, attachment.filename))
 
     @experimental_clean_ammo.error
     @clean.error
     async def clean_error(self, ctx: Context, invoke_error: CommandInvokeError):
         error = invoke_error.original
 
-        if isinstance(error, json.decoder.JSONDecodeError):
-            await ctx.send(f"```py\n" f"{error.__class__.__name__}: {error}\n" f"```")
-        else:
-            raise error
+        lines: List[str] = []
+        if isinstance(error, JSONDecodeError):
+            lines.extend([
+                f"{ctx.message.author.mention}",
+                "Your profile seems to be not a valid json file, did you edit it manually?",
+            ])
 
-    # @commands.check(no_dms_check)
-    # @commands.command()
-    async def analyze(self, context: Context):
-        for attachment in context.message.attachments:
-            attachment: Attachment
-            response = cleanin.duplicates.clean(json.loads(await attachment.read()))
-
-            duplicate_items = "\n".join(response.duplicate_items)
-            orphan_items = "\n".join(response.removed_orphan_items)
-
-            string = "\n".join(
-                [
-                    "```",
-                    f"Duplicate items ({len(response.duplicate_items)}):",
-                    f"{duplicate_items}",
-                    f"Orphan items ({len(response.removed_orphan_items)}):",
-                    f"{orphan_items}",
-                    "```",
-                ]
-            )
-            await context.send(
-                "There's your report:", file=File(io.BytesIO(string.encode()), filename="report.md")
-            )
+        lines.extend([
+            "",
+            "Error stacktrace:"
+            f"```py\n" f"{error.__class__.__name__}: {error}\n```"
+        ])
+        await ctx.send(content="\n".join(lines))
