@@ -37,14 +37,21 @@ class ProfileCleanerCog(Cog):
 
         attachment: Attachment = context.message.attachments[0]
         response = cleanin.duplicates.clean(json.loads(await attachment.read()))
-        response.profile = cleanin.ammo.clean(response.profile)
+        response.profile, broken_ammo_amount = cleanin.ammo.clean(response.profile)
 
-        if response.profile_changed:
+        if any([
+            response.duplicate_items,
+            response.removed_orphan_items,
+            broken_ammo_amount,
+        ]):
             messages: List[str] = [f"{context.message.author.mention}"]
             if response.duplicate_items:
                 messages.append(f"Removed {len(response.duplicate_items)} duplicate item(s).")
             if response.removed_orphan_items:
                 messages.append(f"Removed {len(response.removed_orphan_items)} orphan item(s).")
+
+            if broken_ammo_amount:
+                messages.append(f"Removed {broken_ammo_amount} broken ammo stacks.")
 
             await context.send(
                 "\n".join(messages),
@@ -52,7 +59,7 @@ class ProfileCleanerCog(Cog):
             )
         else:
             await context.send(
-                f"{context.message.author.mention} No duplicate items were found in profile"
+                f"{context.message.author.mention} No duplicate or broken items were found in profile"
             )
 
     @clean.error

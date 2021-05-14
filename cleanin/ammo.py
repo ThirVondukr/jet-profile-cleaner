@@ -1,10 +1,12 @@
 from collections import defaultdict
-from typing import List
+from typing import List, Tuple
 
 from typing_extensions import DefaultDict
 
+Profile = dict
 
-def clean(profile: dict) -> dict:
+
+def clean(profile: Profile) -> Tuple[Profile, int]:
     cartridges: DefaultDict[str, list] = defaultdict(list)
     items = profile["Inventory"]["items"]
     for item in items:
@@ -24,4 +26,5 @@ def clean(profile: dict) -> dict:
 
     profile["Inventory"]["items"] = [item for item in profile["Inventory"]["items"] if item not in broken_ammo]
 
-    return profile
+    broken_ammo_amount = len(broken_ammo)
+    return profile, broken_ammo_amount
