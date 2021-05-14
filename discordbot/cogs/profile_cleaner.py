@@ -37,6 +37,7 @@ class ProfileCleanerCog(Cog):
 
         attachment: Attachment = context.message.attachments[0]
         response = cleanin.duplicates.clean(json.loads(await attachment.read()))
+        response.profile = cleanin.ammo.clean(response.profile)
 
         if response.profile_changed:
             messages: List[str] = [f"{context.message.author.mention}"]
@@ -54,15 +55,6 @@ class ProfileCleanerCog(Cog):
                 f"{context.message.author.mention} No duplicate items were found in profile"
             )
 
-    @commands.check(no_dms_check)
-    @commands.command()
-    async def experimental_clean_ammo(self, ctx: Context):
-        attachment: Attachment = ctx.message.attachments[0]
-        profile = json.loads(await attachment.read())
-        profile = cleanin.ammo.clean(profile)
-        await ctx.send(file=dict_to_file(profile, attachment.filename))
-
-    @experimental_clean_ammo.error
     @clean.error
     async def clean_error(self, ctx: Context, invoke_error: CommandInvokeError):
         error = invoke_error.original

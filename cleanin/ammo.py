@@ -22,6 +22,6 @@ def clean(profile: dict) -> dict:
         if sorted(locations) != list(range(len(locations))):
             broken_ammo.extend(ammo_list)
 
-    profile["Inventory"]["items"] = [i for i in profile["Inventory"]["items"] if i not in broken_ammo]
+    profile["Inventory"]["items"] = [item for item in profile["Inventory"]["items"] if item not in broken_ammo]
 
     return profile
