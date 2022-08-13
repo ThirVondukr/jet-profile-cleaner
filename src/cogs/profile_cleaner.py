@@ -6,8 +6,8 @@ from discord import Attachment, DMChannel
 from discord.ext import commands
 from discord.ext.commands import Bot, Cog, CommandInvokeError, Context
 
-import cleanin
-from discordbot.utils import dict_to_file
+import cleaning
+from utils import dict_to_file
 
 
 async def no_dms_check(context: Context):
@@ -36,19 +36,25 @@ class ProfileCleanerCog(Cog):
             return
 
         attachment: Attachment = context.message.attachments[0]
-        response = cleanin.duplicates.clean(json.loads(await attachment.read()))
-        response.profile, broken_ammo_amount = cleanin.ammo.clean(response.profile)
+        response = cleaning.duplicates.clean(json.loads(await attachment.read()))
+        response.profile, broken_ammo_amount = cleaning.ammo.clean(response.profile)
 
-        if any([
-            response.duplicate_items,
-            response.removed_orphan_items,
-            broken_ammo_amount,
-        ]):
+        if any(
+            [
+                response.duplicate_items,
+                response.removed_orphan_items,
+                broken_ammo_amount,
+            ]
+        ):
             messages: List[str] = [f"{context.message.author.mention}"]
             if response.duplicate_items:
-                messages.append(f"Removed {len(response.duplicate_items)} duplicate item(s).")
+                messages.append(
+                    f"Removed {len(response.duplicate_items)} duplicate item(s)."
+                )
             if response.removed_orphan_items:
-                messages.append(f"Removed {len(response.removed_orphan_items)} orphan item(s).")
+                messages.append(
+                    f"Removed {len(response.removed_orphan_items)} orphan item(s)."
+                )
 
             if broken_ammo_amount:
                 messages.append(f"Removed {broken_ammo_amount} broken ammo stacks.")
@@ -68,14 +74,19 @@ class ProfileCleanerCog(Cog):
 
         lines: List[str] = []
         if isinstance(error, JSONDecodeError):
-            lines.extend([
-                f"{ctx.message.author.mention}",
-                "Your profile seems to be not a valid json file, did you edit it manually?",
-            ])
+            lines.extend(
+                [
+                    f"{ctx.message.author.mention}",
+                    "Your profile seems to be not a valid json file, did you edit it manually?",
+                ]
+            )
 
-        lines.extend([
-            "",
-            "Error stacktrace:"
-            f"```py\n" f"{error.__class__.__name__}: {error}\n```"
-        ])
+        lines.extend(
+            [
+                "",
+                "Error stacktrace:"
+                f"```py\n"
+                f"{error.__class__.__name__}: {error}\n```",
+            ]
+        )
         await ctx.send(content="\n".join(lines))

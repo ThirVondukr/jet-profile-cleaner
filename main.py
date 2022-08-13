@@ -1,9 +1,17 @@
-import os
+import asyncio
 
 import dotenv
 
-from discordbot.bot import bot
 
-dotenv.load_dotenv()
+async def main():
+    import app
+    import settings
 
-bot.run(os.getenv("BOT_TOKEN"))
+    bot = await app.create_app()
+    async with bot:
+        await bot.start(token=settings.bot.token)
+
+
+if __name__ == "__main__":
+    dotenv.load_dotenv()
+    asyncio.run(main())
